@@ -54,7 +54,8 @@ export function generateVCard(contact: Contact): string {
 }
 
 export function generateVCFFile(contacts: Contact[]): string {
-  return contacts.map(generateVCard).join('\r\n');
+  // Each vCard must be separated by a blank line for phones to recognize multiple contacts
+  return contacts.map(generateVCard).join('\r\n\r\n');
 }
 
 export function downloadVCF(contacts: Contact[], filename: string = 'contacts.vcf'): void {
