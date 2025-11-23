@@ -167,17 +167,24 @@ export default function QRCodeDisplay({ contacts, prefix, onStartOver }: QRCodeD
         <div className="space-y-3">
           <div className="flex items-start gap-3">
             <span className="w-6 h-6 bg-blue-100 dark:bg-blue-900 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">1</span>
-            <p className="text-gray-600 dark:text-gray-300">Download the .vcf file</p>
+            <p className="text-gray-600 dark:text-gray-300">Download the .vcf file to your phone</p>
           </div>
           <div className="flex items-start gap-3">
             <span className="w-6 h-6 bg-blue-100 dark:bg-blue-900 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</span>
-            <p className="text-gray-600 dark:text-gray-300">Open it on your phone (email it to yourself or use AirDrop/Drive)</p>
+            <p className="text-gray-600 dark:text-gray-300">Open the file, then tap the <strong>Share button</strong> (square with arrow)</p>
           </div>
           <div className="flex items-start gap-3">
             <span className="w-6 h-6 bg-blue-100 dark:bg-blue-900 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">3</span>
-            <p className="text-gray-600 dark:text-gray-300">Tap &quot;Add All Contacts&quot; when prompted</p>
+            <p className="text-gray-600 dark:text-gray-300">Select <strong>&quot;Contacts&quot;</strong> from the share options</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="w-6 h-6 bg-blue-100 dark:bg-blue-900 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">4</span>
+            <p className="text-gray-600 dark:text-gray-300">Tap <strong>&quot;Add All {contacts.length} Contacts&quot;</strong></p>
           </div>
         </div>
+        <p className="mt-4 text-sm text-amber-600 dark:text-amber-400">
+          <strong>iOS 18 Note:</strong> If you only see one contact, use the Share button to import all.
+        </p>
       </div>
 
       {/* How to Delete Contacts */}

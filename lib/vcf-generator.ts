@@ -28,10 +28,10 @@ function formatPhoneNumber(phone: string): string {
 export function generateVCard(contact: Contact): string {
   const lines: string[] = [
     'BEGIN:VCARD',
-    'VERSION:2.1',  // iOS works better with 2.1 for bulk imports
+    'VERSION:3.0',  // iOS requires 3.0 for proper multi-contact import
   ];
 
-  // Name
+  // Name - handle single name vs full name
   const nameParts = contact.fullName.trim().split(/\s+/);
   const firstName = nameParts[0] || '';
   const lastName = nameParts.slice(1).join(' ') || '';
@@ -39,11 +39,11 @@ export function generateVCard(contact: Contact): string {
   lines.push(`N:${escapeVCF(lastName)};${escapeVCF(firstName)};;;`);
   lines.push(`FN:${escapeVCF(contact.fullName)}`);
 
-  // Phone - only add if valid
+  // Phone - iOS 3.0 format with type= syntax
   if (contact.phone) {
     const formattedPhone = formatPhoneNumber(contact.phone);
     if (formattedPhone) {
-      lines.push(`TEL;CELL:${formattedPhone}`);
+      lines.push(`TEL;type=CELL:${formattedPhone}`);
     }
   }
 
