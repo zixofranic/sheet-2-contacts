@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import FileUpload from '@/components/FileUpload';
 import ColumnMapper from '@/components/ColumnMapper';
 import ContactPreview from '@/components/ContactPreview';
@@ -22,6 +22,16 @@ export default function Home() {
     notes: null,
   });
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [prefix, setPrefix] = useState('');
+
+  // Apply prefix to contacts
+  const prefixedContacts = useMemo(() => {
+    if (!prefix.trim()) return contacts;
+    return contacts.map(contact => ({
+      ...contact,
+      fullName: `${prefix.trim()} - ${contact.fullName}`,
+    }));
+  }, [contacts, prefix]);
 
   const handleFileSelect = async (file: File) => {
     setIsLoading(true);
@@ -90,6 +100,7 @@ export default function Home() {
       notes: null,
     });
     setContacts([]);
+    setPrefix('');
     setError(null);
   };
 
@@ -217,6 +228,8 @@ export default function Home() {
         {step === 'preview' && (
           <ContactPreview
             contacts={contacts}
+            prefix={prefix}
+            onPrefixChange={setPrefix}
             onBack={() => setStep('mapping')}
             onExport={handleExport}
           />
@@ -224,7 +237,8 @@ export default function Home() {
 
         {step === 'export' && (
           <QRCodeDisplay
-            contacts={contacts}
+            contacts={prefixedContacts}
+            prefix={prefix}
             onStartOver={handleStartOver}
           />
         )}

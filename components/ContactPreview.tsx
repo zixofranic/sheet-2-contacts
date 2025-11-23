@@ -1,23 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Contact } from '@/lib/types';
 
 interface ContactPreviewProps {
   contacts: Contact[];
+  prefix: string;
+  onPrefixChange: (prefix: string) => void;
   onBack: () => void;
   onExport: () => void;
 }
 
 const CONTACTS_PER_PAGE = 10;
 
-export default function ContactPreview({ contacts, onBack, onExport }: ContactPreviewProps) {
+export default function ContactPreview({ contacts, prefix, onPrefixChange, onBack, onExport }: ContactPreviewProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const totalPages = Math.ceil(contacts.length / CONTACTS_PER_PAGE);
+  // Apply prefix to contacts for preview
+  const previewContacts = useMemo(() => {
+    if (!prefix.trim()) return contacts;
+    return contacts.map(contact => ({
+      ...contact,
+      fullName: `${prefix.trim()} - ${contact.fullName}`,
+    }));
+  }, [contacts, prefix]);
+
+  const totalPages = Math.ceil(previewContacts.length / CONTACTS_PER_PAGE);
   const startIndex = (currentPage - 1) * CONTACTS_PER_PAGE;
   const endIndex = startIndex + CONTACTS_PER_PAGE;
-  const currentContacts = contacts.slice(startIndex, endIndex);
+  const currentContacts = previewContacts.slice(startIndex, endIndex);
 
   const goToPage = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
@@ -30,6 +41,25 @@ export default function ContactPreview({ contacts, onBack, onExport }: ContactPr
         <p className="text-gray-500 dark:text-gray-400 mt-2">
           {contacts.length} contacts ready to export
         </p>
+      </div>
+
+      {/* Tag/Prefix Input - BEFORE the contact list */}
+      <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+        <label className="block text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+          Add a tag to identify these contacts (optional)
+        </label>
+        <input
+          type="text"
+          value={prefix}
+          onChange={(e) => onPrefixChange(e.target.value)}
+          placeholder="e.g., Sierra-Nov-25, OpenHouse, Facebook-Leads"
+          className="w-full px-4 py-3 border border-blue-200 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-white"
+        />
+        {prefix.trim() && (
+          <p className="mt-2 text-sm text-blue-600 dark:text-blue-400">
+            All contacts will be prefixed: <span className="font-medium">{prefix.trim()} - Name</span>
+          </p>
+        )}
       </div>
 
       {/* Contact Cards */}
@@ -149,7 +179,7 @@ export default function ContactPreview({ contacts, onBack, onExport }: ContactPr
 
       {/* Page info */}
       <p className="text-center text-sm text-gray-500">
-        Showing {startIndex + 1}-{Math.min(endIndex, contacts.length)} of {contacts.length} contacts
+        Showing {startIndex + 1}-{Math.min(endIndex, previewContacts.length)} of {previewContacts.length} contacts
       </p>
 
       {/* Stats */}

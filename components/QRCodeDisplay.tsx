@@ -6,29 +6,24 @@ import { Contact } from '@/lib/types';
 import { downloadVCF, getVCFDataUrl, generateVCFFile } from '@/lib/vcf-generator';
 
 interface QRCodeDisplayProps {
-  contacts: Contact[];
+  contacts: Contact[];  // Already prefixed from parent
+  prefix: string;
   onStartOver: () => void;
 }
 
-export default function QRCodeDisplay({ contacts, onStartOver }: QRCodeDisplayProps) {
+export default function QRCodeDisplay({ contacts, prefix, onStartOver }: QRCodeDisplayProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [canShare, setCanShare] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  const [prefix, setPrefix] = useState('');
-
-  // Apply prefix to contacts
-  const prefixedContacts = useMemo(() => {
-    if (!prefix.trim()) return contacts;
-    return contacts.map(contact => ({
-      ...contact,
-      fullName: `${prefix.trim()} - ${contact.fullName}`,
-    }));
-  }, [contacts, prefix]);
 
   // Generate VCF data URL for download link
   const vcfDataUrl = useMemo(() => {
-    return getVCFDataUrl(prefixedContacts);
-  }, [prefixedContacts]);
+    return getVCFDataUrl(contacts);
+  }, [contacts]);
+
+  const filename = prefix.trim()
+    ? `${prefix.trim()}-${contacts.length}.vcf`
+    : `contacts-${contacts.length}.vcf`;
 
   useEffect(() => {
     setCanShare(typeof navigator !== 'undefined' && !!navigator.share && !!navigator.canShare);
@@ -37,7 +32,7 @@ export default function QRCodeDisplay({ contacts, onStartOver }: QRCodeDisplayPr
   useEffect(() => {
     const generateQR = async () => {
       try {
-        if (prefixedContacts.length <= 5) {
+        if (contacts.length <= 5) {
           const qr = await QRCode.toDataURL(vcfDataUrl, {
             width: 256,
             margin: 2,
@@ -53,13 +48,10 @@ export default function QRCodeDisplay({ contacts, onStartOver }: QRCodeDisplayPr
     };
 
     generateQR();
-  }, [prefixedContacts, vcfDataUrl]);
+  }, [contacts, vcfDataUrl]);
 
   const handleDownload = () => {
-    const filename = prefix.trim()
-      ? `${prefix.trim()}-${prefixedContacts.length}.vcf`
-      : `contacts-${prefixedContacts.length}.vcf`;
-    downloadVCF(prefixedContacts, filename);
+    downloadVCF(contacts, filename);
   };
 
   const handleShare = async () => {
@@ -67,24 +59,21 @@ export default function QRCodeDisplay({ contacts, onStartOver }: QRCodeDisplayPr
 
     setIsSharing(true);
     try {
-      const vcfContent = generateVCFFile(prefixedContacts);
-      const filename = prefix.trim()
-        ? `${prefix.trim()}-${prefixedContacts.length}.vcf`
-        : `contacts-${prefixedContacts.length}.vcf`;
+      const vcfContent = generateVCFFile(contacts);
       const file = new File([vcfContent], filename, {
-        type: 'text/vcard',
+        type: 'text/x-vcard',
       });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: 'My Contacts',
-          text: `${prefixedContacts.length} contacts exported from Sheet to Contacts`,
+          text: `${contacts.length} contacts exported from Sheet to Contacts`,
         });
       } else {
         await navigator.share({
           title: 'Sheet to Contacts',
-          text: `I just exported ${prefixedContacts.length} contacts! Try it at:`,
+          text: `I just exported ${contacts.length} contacts! Try it at:`,
           url: window.location.origin,
         });
       }
@@ -108,26 +97,8 @@ export default function QRCodeDisplay({ contacts, onStartOver }: QRCodeDisplayPr
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Contacts Ready!</h2>
         <p className="text-gray-500 dark:text-gray-400 mt-2">
           {contacts.length} contacts generated successfully
+          {prefix.trim() && <span className="block text-sm mt-1">Tagged: {prefix.trim()}</span>}
         </p>
-      </div>
-
-      {/* Tag/Prefix Input */}
-      <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-        <label className="block text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
-          Add a tag to identify these contacts (optional)
-        </label>
-        <input
-          type="text"
-          value={prefix}
-          onChange={(e) => setPrefix(e.target.value)}
-          placeholder="e.g., Sierra-Nov-25, OpenHouse, Facebook-Leads"
-          className="w-full px-4 py-3 border border-blue-200 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-white"
-        />
-        {prefix.trim() && (
-          <p className="mt-2 text-sm text-blue-600 dark:text-blue-400">
-            Preview: <span className="font-medium">{prefix.trim()} - John Smith</span>
-          </p>
-        )}
       </div>
 
       {/* Action Buttons */}
@@ -158,7 +129,7 @@ export default function QRCodeDisplay({ contacts, onStartOver }: QRCodeDisplayPr
       </div>
 
       {/* QR Code Section */}
-      {prefixedContacts.length <= 5 && qrDataUrl && (
+      {contacts.length <= 5 && qrDataUrl && (
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             Or scan with your phone camera:
@@ -174,7 +145,7 @@ export default function QRCodeDisplay({ contacts, onStartOver }: QRCodeDisplayPr
         </div>
       )}
 
-      {prefixedContacts.length > 5 && (
+      {contacts.length > 5 && (
         <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
           <div className="flex items-start gap-3">
             <span className="text-2xl">💡</span>
@@ -215,14 +186,14 @@ export default function QRCodeDisplay({ contacts, onStartOver }: QRCodeDisplayPr
         <div className="space-y-3 text-sm text-red-700 dark:text-red-300">
           <p><strong>iPhone:</strong> Contacts → Groups → Select your import group → Delete</p>
           <p><strong>Android:</strong> Contacts → Menu → Select multiple → Delete</p>
-          <p><strong>Pro tip:</strong> Use a unique tag (like &quot;Sierra-Nov-25&quot;) so you can search and delete all contacts from that batch easily!</p>
+          <p><strong>Pro tip:</strong> Search for your tag (like &quot;{prefix.trim() || 'Sierra-Nov-25'}&quot;) to find and delete all contacts from this batch!</p>
         </div>
       </div>
 
       {/* Direct Download Link */}
       <a
         href={vcfDataUrl}
-        download={prefix.trim() ? `${prefix.trim()}-${prefixedContacts.length}.vcf` : `contacts-${prefixedContacts.length}.vcf`}
+        download={filename}
         className="block w-full px-6 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-center"
       >
         Alternative: Direct Download Link
