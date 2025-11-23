@@ -10,14 +10,25 @@ function escapeVCF(str: string): string {
 
 function formatPhoneNumber(phone: string): string {
   // Remove all non-numeric characters except + at the start
-  const cleaned = phone.replace(/[^\d+]/g, '');
+  let cleaned = phone.replace(/[^\d+]/g, '');
+  // Ensure + is only at the beginning
+  if (cleaned.includes('+')) {
+    const plusIndex = cleaned.indexOf('+');
+    if (plusIndex > 0) {
+      cleaned = cleaned.replace(/\+/g, '');
+    }
+  }
+  // Return empty if no digits
+  if (!/\d/.test(cleaned)) {
+    return '';
+  }
   return cleaned;
 }
 
 export function generateVCard(contact: Contact): string {
   const lines: string[] = [
     'BEGIN:VCARD',
-    'VERSION:3.0',
+    'VERSION:2.1',  // iOS works better with 2.1 for bulk imports
   ];
 
   // Name
@@ -28,13 +39,16 @@ export function generateVCard(contact: Contact): string {
   lines.push(`N:${escapeVCF(lastName)};${escapeVCF(firstName)};;;`);
   lines.push(`FN:${escapeVCF(contact.fullName)}`);
 
-  // Phone
+  // Phone - only add if valid
   if (contact.phone) {
-    lines.push(`TEL;TYPE=CELL:${formatPhoneNumber(contact.phone)}`);
+    const formattedPhone = formatPhoneNumber(contact.phone);
+    if (formattedPhone) {
+      lines.push(`TEL;CELL:${formattedPhone}`);
+    }
   }
 
   // Email
-  if (contact.email) {
+  if (contact.email && contact.email.includes('@')) {
     lines.push(`EMAIL:${escapeVCF(contact.email)}`);
   }
 
@@ -54,13 +68,16 @@ export function generateVCard(contact: Contact): string {
 }
 
 export function generateVCFFile(contacts: Contact[]): string {
-  // Each vCard must be separated by a blank line for phones to recognize multiple contacts
-  return contacts.map(generateVCard).join('\r\n\r\n');
+  // Generate each vCard and join with proper line endings
+  // iOS requires exact formatting: each vCard ends with \r\n, then blank line between
+  const vCards = contacts.map(generateVCard);
+  return vCards.join('\r\n\r\n') + '\r\n';
 }
 
 export function downloadVCF(contacts: Contact[], filename: string = 'contacts.vcf'): void {
   const vcfContent = generateVCFFile(contacts);
-  const blob = new Blob([vcfContent], { type: 'text/vcard;charset=utf-8' });
+  // Use text/x-vcard for better iOS compatibility
+  const blob = new Blob([vcfContent], { type: 'text/x-vcard;charset=utf-8' });
   const url = URL.createObjectURL(blob);
 
   const link = document.createElement('a');
@@ -75,6 +92,10 @@ export function downloadVCF(contacts: Contact[], filename: string = 'contacts.vc
 
 export function getVCFDataUrl(contacts: Contact[]): string {
   const vcfContent = generateVCFFile(contacts);
-  const base64 = btoa(unescape(encodeURIComponent(vcfContent)));
-  return `data:text/vcard;base64,${base64}`;
+  // Use TextEncoder for proper UTF-8 encoding
+  const encoder = new TextEncoder();
+  const uint8Array = encoder.encode(vcfContent);
+  const binaryString = Array.from(uint8Array, byte => String.fromCharCode(byte)).join('');
+  const base64 = btoa(binaryString);
+  return `data:text/x-vcard;base64,${base64}`;
 }
