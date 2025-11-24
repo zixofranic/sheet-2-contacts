@@ -101,37 +101,42 @@ export default function QRCodeDisplay({ contacts, prefix, onStartOver }: QRCodeD
         </p>
       </div>
 
-      {/* Primary Action - Share to Contacts (Mobile) */}
-      {canShare && (
-        <button
-          onClick={handleShare}
-          disabled={isSharing}
-          className="w-full px-6 py-5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-3 text-xl disabled:opacity-50 shadow-lg"
-        >
-          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-          </svg>
-          {isSharing ? 'Opening...' : `Add ${contacts.length} Contacts`}
-        </button>
-      )}
-
-      {canShare && (
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-          Tap above → Select <strong>&quot;Contacts&quot;</strong> → <strong>&quot;Add All&quot;</strong>
-        </p>
-      )}
-
-      {/* Secondary: Download (for desktop or fallback) */}
-      <div className="flex gap-3">
+      {/* Primary Actions */}
+      <div className="space-y-3">
+        {/* Download Button - Primary */}
         <button
           onClick={handleDownload}
-          className={`flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 ${canShare ? 'text-gray-600 dark:text-gray-300' : 'bg-blue-600 text-white py-4 text-lg'}`}
+          className="w-full px-6 py-5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-3 text-xl shadow-lg"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          {canShare ? 'Download File' : 'Download .vcf'}
+          Download {contacts.length} Contacts
         </button>
+
+        {/* Email to Self Option */}
+        {canShare && (
+          <button
+            onClick={handleShare}
+            disabled={isSharing}
+            className="w-full px-6 py-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-3 text-lg disabled:opacity-50"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            {isSharing ? 'Opening...' : 'Email / AirDrop to Phone'}
+          </button>
+        )}
+      </div>
+
+      {/* Clear Instructions */}
+      <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+        <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-3">To add contacts on iPhone:</h3>
+        <div className="space-y-2 text-sm text-blue-700 dark:text-blue-300">
+          <p><strong>1.</strong> Download the file (or email/AirDrop it to your phone)</p>
+          <p><strong>2.</strong> Open the .vcf file from Safari downloads or Files app</p>
+          <p><strong>3.</strong> Tap <strong>&quot;Add All {contacts.length} Contacts&quot;</strong></p>
+        </div>
       </div>
 
       {/* QR Code Section */}
@@ -167,17 +172,6 @@ export default function QRCodeDisplay({ contacts, prefix, onStartOver }: QRCodeD
         </div>
       )}
 
-      {/* Instructions - Only show for desktop/download flow */}
-      {!canShare && (
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
-          <h3 className="font-semibold text-gray-800 dark:text-white mb-4">After downloading:</h3>
-          <div className="space-y-2 text-gray-600 dark:text-gray-300">
-            <p>1. Open the .vcf file on your phone</p>
-            <p>2. Tap <strong>Share</strong> → <strong>Contacts</strong></p>
-            <p>3. Tap <strong>&quot;Add All Contacts&quot;</strong></p>
-          </div>
-        </div>
-      )}
 
       {/* How to Delete Contacts */}
       <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl p-6">
